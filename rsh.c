@@ -21,39 +21,42 @@ struct message {
 };
 
 void terminate(int sig) {
-        printf("Exiting....\n");
-        fflush(stdout);
-        exit(0);
+  printf("Exiting....\n");
+  fflush(stdout);
+  exit(0);
 }
 
-void sendmsg (char *user, char *target, char *msg) {
-	// TODO:
-	// Send a request to the server to send the message (msg) to the target user (target)
-	// by creating the message structure and writing it to server's FIFO
-
-
-
-
-
-
-
-
+void sendmsg(char *user, char *target, char *msg) {
+	struct message m;
+	strcpy(m.source, user);
+	strcpy(m.target, target);
+	strcpy(m.msg, msg);
+	
+	int fd = open("serverFIFO", O_WRONLY);
+	if (fd < 0) {
+			perror("Failed to open server FIFO");
+			return;
+	}
+	
+	write(fd, &m, sizeof(m));
+	close(fd);
 }
 
 void* messageListener(void *arg) {
-	// TODO:
-	// Read user's own FIFO in an infinite loop for incoming messages
-	// The logic is similar to a server listening to requests
-	// print the incoming message to the standard output in the
-	// following format
-	// Incoming message from [source]: [message]
-	// put an end of line at the end of the message
-
-
-
-
-
-
+	while (1) {
+			int fd = open(uName, O_RDONLY);
+			if (fd < 0) {
+					perror("Failed to open user FIFO");
+					sleep(1); // Avoid busy waiting if FIFO isn't ready
+					continue;
+			}
+			
+			struct message m;
+			if (read(fd, &m, sizeof(m)) > 0) {
+					printf("Incoming message from [%s]: %s\n", m.source, m.msg);
+			}
+			close(fd);
+	}
 	pthread_exit((void*)0);
 }
 
@@ -85,11 +88,12 @@ int main(int argc, char **argv) {
 
     // TODO:
     // create the message listener thread
-
-
-
-
-
+    pthread_t listener;
+    if (pthread_create(&listener, NULL, messageListener, NULL) != 0) {
+        perror("Failed to create listener thread");
+        exit(1);
+    }
+    pthread_detach(listener);
     while (1) {
 
 	fprintf(stderr,"rsh>");
@@ -123,15 +127,6 @@ int main(int argc, char **argv) {
 		// printf("sendmsg: you have to specify target user\n");
 		// if no message is specified, you should print the followingA
  		// printf("sendmsg: you have to enter a message\n");
-
-
-
-
-
-
-
-
-
 
 		continue;
 	}
