@@ -114,22 +114,32 @@ int main(int argc, char **argv) {
 		continue;
 	}
 
-	if (strcmp(cmd,"sendmsg")==0) {
-		// TODO: Create the target user and
-		// the message string and call the sendmsg function
+	if (strcmp(cmd, "sendmsg") == 0) {
+    //extract the target user from the input
+    char *target = strtok(NULL, " ");
+    if (!target) {
+      //if no target is specified, notify the user
+      printf("sendmsg: you have to specify target user\n");
+      continue;
+    }
 
-		// NOTE: The message itself can contain spaces
-		// If the user types: "sendmsg user1 hello there"
-		// target should be "user1" 
-		// and the message should be "hello there"
+    //find the start of the message string in the original input line
+    char *messageStart = strstr(line2, target);
+    if (messageStart) {
+      messageStart += strlen(target); //skip past the target user
+      while (*messageStart == ' ') messageStart++; //skip any leading spaces before the message
+    }
 
-		// if no argument is specified, you should print the following
-		// printf("sendmsg: you have to specify target user\n");
-		// if no message is specified, you should print the followingA
- 		// printf("sendmsg: you have to enter a message\n");
+    if (!messageStart || strlen(messageStart) == 0) {
+      //if no message is specified, notify the user
+      printf("sendmsg: you have to enter a message\n");
+      continue;
+    }
 
-		continue;
-	}
+    //send the message to the target user via server FIFO
+    sendmsg(uName, target, messageStart);
+    continue;
+}
 
 	if (strcmp(cmd,"exit")==0) break;
 
