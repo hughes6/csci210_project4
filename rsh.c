@@ -21,8 +21,6 @@ struct message {
 };
 
 void terminate(int sig) {
-  printf("Exiting....\n");
-  fflush(stdout);
   exit(0);
 }
 
@@ -56,6 +54,13 @@ void* messageListener(void *arg) {
 					printf("Incoming message from [%s]: %s\n", m.source, m.msg);
 			}
 			close(fd);
+
+			int bytes = read(fd, &m, sizeof(m));
+			if (bytes == 0) {
+   		//FIFO was closed
+    	printf("Exiting....\n");
+    	break;
+}
 	}
 	pthread_exit((void*)0);
 }
@@ -98,7 +103,7 @@ int main(int argc, char **argv) {
 
 	fprintf(stderr,"rsh>");
 
-	if (fgets(line,256,stdin)==NULL) continue;
+	if (fgets(line,256,stdin)==NULL) break;
 
 	if (strcmp(line,"\n")==0) continue;
 
