@@ -53,7 +53,7 @@ void* messageListener(void *arg) {
 			
 			struct message m;
 			if (read(fd, &m, sizeof(m)) > 0) {
-					printf("Incoming message from [%s]: %s\n", m.source, m.msg);
+					printf("Incoming message from %s: %s\n", m.source, m.msg);
 			}
 			close(fd);
 	}
