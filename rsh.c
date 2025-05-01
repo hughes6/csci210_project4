@@ -34,8 +34,8 @@ void sendmsg(char *user, char *target, char *msg) {
 
         int fd = open("serverFIFO", O_WRONLY);
         if (fd < 0) {
-                        perror("Failed to open server FIFO");
-                        return;
+            perror("Failed to open server FIFO");
+            return;
         }
 
         write(fd, &m, sizeof(m));
@@ -43,22 +43,26 @@ void sendmsg(char *user, char *target, char *msg) {
 }
 
 void* messageListener(void *arg) {
-        while (1) {
-                        int fd = open(uName, O_RDONLY);
-                        if (fd < 0) {
-                                        perror("Failed to open user FIFO");
-                                        sleep(1); // Avoid busy waiting if FIFO isn't ready
-                                        continue;
-                        }
+	int fd = open(uName, O_RDONLY);
+	if (fd < 0) {
+			perror("Failed to open user FIFO");
+			pthread_exit((void*)0);
+	}
 
-                        struct message m;
-                        if (read(fd, &m, sizeof(m)) > 0) {
-                                        printf("Incoming message from %s: %s\n", m.source, m.msg);
-                        }
-                        close(fd);
-        }
-        pthread_exit((void*)0);
+	struct message m;
+	while (1) {
+			ssize_t bytesRead = read(fd, &m, sizeof(m));
+			if (bytesRead != sizeof(m)) {
+					continue; // skip malformed or partial reads
+			}
+			printf("Incoming message from %s: %s\n", m.source, m.msg);
+			fflush(stdout);
+	}
+
+	close(fd); // (Not actually reached, but good practice)
+	pthread_exit((void*)0);
 }
+
 
 int isAllowed(const char*cmd) {
         int i;
